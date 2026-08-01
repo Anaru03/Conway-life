@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::Write;
 
+#[allow(dead_code)]
 pub fn write_bmp(filename: &str, width: usize, height: usize, rgb_buffer: &[u8]) -> std::io::Result<()> {
     let row_padded = (width * 3 + 3) & !3;
     let data_size = row_padded * height;

@@ -1,4 +1,3 @@
-
 pub struct Framebuffer {
     pub width: usize,
     pub height: usize,
@@ -58,8 +57,8 @@ impl Framebuffer {
         let b = (color & 0xFF) as u8;
 
         (r, g, b)
-
     }
+
     pub fn render_to_file(&self, filename: &str) {
         image::save_buffer(
             filename,
