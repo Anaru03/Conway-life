@@ -1,3 +1,4 @@
+
 pub struct Framebuffer {
     pub width: usize,
     pub height: usize,
@@ -37,13 +38,28 @@ impl Framebuffer {
         self.buffer[idx + 2] = b;
     }
 
+    pub fn get_color(&self, x: i32, y: i32) -> u32 {
+        if x < 0 || y < 0 || x as usize >= self.width || y as usize >= self.height {
+            return self.background_color;
+        }
+
+        let idx = (y as usize * self.width + x as usize) * 3;
+
+        let r = self.buffer[idx] as u32;
+        let g = self.buffer[idx + 1] as u32;
+        let b = self.buffer[idx + 2] as u32;
+
+        (r << 16) | (g << 8) | b
+    }
+
     pub fn unpack_color(color: u32) -> (u8, u8, u8) {
         let r = ((color >> 16) & 0xFF) as u8;
         let g = ((color >> 8) & 0xFF) as u8;
         let b = (color & 0xFF) as u8;
-        (r, g, b)
-    }
 
+        (r, g, b)
+
+    }
     pub fn render_to_file(&self, filename: &str) {
         image::save_buffer(
             filename,
