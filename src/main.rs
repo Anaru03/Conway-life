@@ -5,7 +5,6 @@ mod render;
 
 use framebuffer::Framebuffer;
 use minifb::{Key, Window, WindowOptions};
-use std::time::Duration;
 
 const BLACK: u32 = 0x000000;
 
@@ -29,7 +28,7 @@ fn main() {
     .expect("No se pudo crear la ventana");
 
     // Limita el refresco para poder ver la animacion (equivale al "delay" entre frames)
-    window.limit_update_rate(Some(Duration::from_millis(100)));
+    window.set_target_fps(10);
 
     let mut screen_buffer: Vec<u32> = vec![0; window_width * window_height];
 

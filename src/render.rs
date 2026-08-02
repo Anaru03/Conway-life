@@ -4,9 +4,11 @@ use crate::patterns::{self, Pattern};
 const BLACK: u32 = 0x000000;
 const WHITE: u32 = 0xFFFFFF;
 
-/// Dibuja el patron inicial: varios organismos clasicos repartidos por la pantalla.
 pub fn init(framebuffer: &mut Framebuffer) {
     framebuffer.clear();
+
+    let width = framebuffer.width as i32;
+    let height = framebuffer.height as i32;
 
     let mut spawn = |pattern: Pattern, ox: i32, oy: i32| {
         for (x, y) in pattern {
@@ -14,36 +16,53 @@ pub fn init(framebuffer: &mut Framebuffer) {
         }
     };
 
-    // Still lifes
-    spawn(patterns::block(), 5, 5);
-    spawn(patterns::beehive(), 15, 5);
-    spawn(patterns::loaf(), 25, 5);
-    spawn(patterns::boat(), 35, 5);
-    spawn(patterns::tub(), 45, 5);
+    // Generador pseudoaleatorio simple (LCG) para repartir organismos por todo el tablero
+    let mut seed: u64 = 20260108;
+    let mut next = move || -> u32 {
+        seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1);
+        (seed >> 33) as u32
+    };
 
-    // Oscillators
-    spawn(patterns::blinker(), 10, 20);
-    spawn(patterns::toad(), 20, 20);
-    spawn(patterns::beacon(), 30, 20);
-    spawn(patterns::pulsar(), 55, 15);
-    spawn(patterns::pentadecathlon(), 5, 45);
+    type Gen = fn() -> Pattern;
+    let generators: [Gen; 14] = [
+        patterns::block,
+        patterns::beehive,
+        patterns::loaf,
+        patterns::boat,
+        patterns::tub,
+        patterns::blinker,
+        patterns::toad,
+        patterns::beacon,
+        patterns::pulsar,
+        patterns::pentadecathlon,
+        patterns::glider,
+        patterns::glider,
+        patterns::lwss,
+        patterns::lwss,
+    ];
 
-    // Spaceships (gliders y LWSS, con espacio libre delante para que "vuelen")
-    spawn(patterns::glider(), 70, 5);
-    spawn(patterns::glider(), 5, 70);
-    spawn(patterns::glider(), 40, 40);
-    spawn(patterns::lwss(), 60, 70);
-    spawn(patterns::lwss(), 20, 85);
+    let cell = 9; // cuadricula de ~9px para repartir organismos por todo el tablero
+
+    let mut gy = 0;
+    while gy < height {
+        let mut gx = 0;
+        while gx < width {
+            if next() % 100 < 55 {
+                let idx = (next() as usize) % generators.len();
+                let jitter_x = (next() % 3) as i32;
+                let jitter_y = (next() % 3) as i32;
+                spawn(generators[idx](), gx + jitter_x, gy + jitter_y);
+            }
+            gx += cell;
+        }
+        gy += cell;
+    }
 }
 
-/// Calcula la siguiente generacion aplicando las 4 reglas de Conway.
-/// Usa unicamente get_color (via una foto/snapshot de la generacion actual)
-/// y set_pixel para escribir el resultado, tal como pide el enunciado.
 pub fn step(framebuffer: &mut Framebuffer) {
     let width = framebuffer.width as i32;
     let height = framebuffer.height as i32;
 
-    // Snapshot de la generacion actual para no leer valores ya actualizados.
     let previous = Framebuffer {
         width: framebuffer.width,
         height: framebuffer.height,
